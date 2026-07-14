@@ -74,6 +74,38 @@ abstract class ModuleShape {
     addPath(path, rect, neighbors);
     return svgFromUiPath(path);
   }
+
+  /// Serializes this shape. Custom shapes (and user subclasses) throw
+  /// [UnsupportedError].
+  Map<String, dynamic> toJson() =>
+      throw UnsupportedError('$runtimeType cannot be serialized to JSON');
+
+  static ModuleShape fromJson(Map<String, dynamic> json) {
+    switch (json['type']) {
+      case 'square':
+        return square;
+      case 'circle':
+        return circle;
+      case 'rounded':
+        return ModuleShape.rounded(radius: (json['radius'] as num).toDouble());
+      case 'diamond':
+        return diamond;
+      case 'star':
+        return ModuleShape.star(
+            points: json['points'] as int,
+            inset: (json['inset'] as num).toDouble());
+      case 'classy':
+        return classy;
+      case 'fluid':
+        return fluid;
+      case 'verticalBars':
+        return verticalBars;
+      case 'horizontalBars':
+        return horizontalBars;
+      default:
+        throw FormatException('Unknown module shape: ${json['type']}');
+    }
+  }
 }
 
 class _SquareShape extends ModuleShape {
@@ -86,6 +118,9 @@ class _SquareShape extends ModuleShape {
 
   @override
   String svgPath(Rect rect, ModuleNeighbors neighbors) => svgRectPath(rect);
+
+  @override
+  Map<String, dynamic> toJson() => {'type': 'square'};
 }
 
 class _CircleShape extends ModuleShape {
@@ -98,6 +133,9 @@ class _CircleShape extends ModuleShape {
 
   @override
   String svgPath(Rect rect, ModuleNeighbors neighbors) => svgOvalPath(rect);
+
+  @override
+  Map<String, dynamic> toJson() => {'type': 'circle'};
 }
 
 class _RoundedShape extends ModuleShape {
@@ -118,6 +156,9 @@ class _RoundedShape extends ModuleShape {
     return svgRRectPath(rect,
         topLeft: r, topRight: r, bottomRight: r, bottomLeft: r);
   }
+
+  @override
+  Map<String, dynamic> toJson() => {'type': 'rounded', 'radius': radius};
 }
 
 class _DiamondShape extends ModuleShape {
@@ -143,6 +184,9 @@ class _DiamondShape extends ModuleShape {
   @override
   String svgPath(Rect rect, ModuleNeighbors neighbors) =>
       svgPolygonPath(_points(rect));
+
+  @override
+  Map<String, dynamic> toJson() => {'type': 'diamond'};
 }
 
 class _StarShape extends ModuleShape {
@@ -180,6 +224,10 @@ class _StarShape extends ModuleShape {
   @override
   String svgPath(Rect rect, ModuleNeighbors neighbors) =>
       svgPolygonPath(_points(rect));
+
+  @override
+  Map<String, dynamic> toJson() =>
+      {'type': 'star', 'points': points, 'inset': inset};
 }
 
 class _ClassyShape extends ModuleShape {
@@ -196,6 +244,9 @@ class _ClassyShape extends ModuleShape {
     final r = Radius.circular(rect.width * 0.5);
     return svgRRectPath(rect, topLeft: r, bottomRight: r);
   }
+
+  @override
+  Map<String, dynamic> toJson() => {'type': 'classy'};
 }
 
 class _FluidShape extends ModuleShape {
@@ -229,6 +280,9 @@ class _FluidShape extends ModuleShape {
     return svgRRectPath(rect,
         topLeft: tl, topRight: tr, bottomRight: br, bottomLeft: bl);
   }
+
+  @override
+  Map<String, dynamic> toJson() => {'type': 'fluid'};
 }
 
 class _BarShape extends ModuleShape {
@@ -266,6 +320,10 @@ class _BarShape extends ModuleShape {
     return svgRRectPath(rect,
         topLeft: tl, topRight: tr, bottomRight: br, bottomLeft: bl);
   }
+
+  @override
+  Map<String, dynamic> toJson() =>
+      {'type': horizontal ? 'horizontalBars' : 'verticalBars'};
 }
 
 class _CustomShape extends ModuleShape {

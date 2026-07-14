@@ -7,7 +7,9 @@ import '../encoder/matrix.dart';
 import '../encoder/qr_encoder.dart';
 import '../image/qr_image.dart';
 import '../image/qr_image_renderer.dart';
+import '../style/qr_effect.dart';
 import '../style/qr_fill.dart';
+import '../style/qr_frame.dart';
 import '../style/qr_style.dart';
 import 'qr_geometry.dart';
 import 'svg_utils.dart';
@@ -23,11 +25,16 @@ import 'svg_utils.dart';
 Future<String> buildQrSvg({
   required QrCode code,
   QrStyle style = const QrStyle(),
+  QrFrame? frame,
   QrImageRenderData? imageData,
   ResolvedQrImage? resolvedImage,
   double size = 512,
 }) async {
-  final layout = QrLayout(code: code, style: style, size: Size.square(size));
+  final frameGeometry = frame == null
+      ? null
+      : QrFrameGeometry.compute(frame, Size.square(size));
+  final qrSize = frameGeometry?.qrRect.size ?? Size.square(size);
+  final layout = QrLayout(code: code, style: style, size: qrSize);
   final defs = StringBuffer();
   var gradientId = 0;
 
@@ -45,20 +52,21 @@ Future<String> buildQrSvg({
     }
   }
 
-  final body = StringBuffer();
-
-  // Background.
-  body.writeln('<rect width="${svgNum(size)}" height="${svgNum(size)}" '
-      '${fillAttr(style.background)}/>');
+  final qrBody = StringBuffer();
 
   final halftone = imageData?.halftone;
   if (halftone != null) {
-    _writeHalftone(body, layout, halftone, fillAttr(style.fill));
+    _writeHalftone(qrBody, layout, halftone, fillAttr(style.fill));
+    _writeEyes(qrBody, layout, fillAttr);
   } else {
-    _writeModules(body, layout, imageData, fillAttr);
+    // Depth effects reference the combined dark geometry via <use>, so the
+    // path data is collected first (effects go beneath the real layers).
+    final modules = _collectModulePaths(layout, imageData);
+    final eyes = _collectEyePaths(layout);
+    _writeEffect(qrBody, defs, layout, modules, eyes);
+    _writeModules(qrBody, layout, modules, fillAttr);
+    _writeEyes(qrBody, layout, fillAttr, collected: eyes);
   }
-
-  _writeEyes(body, layout, fillAttr);
 
   // Centered logo.
   final logoMode = resolvedImage?.mode;
@@ -75,11 +83,26 @@ Future<String> buildQrSvg({
         logoMode.scale * symbolSide,
       );
       final b64 = base64Encode(png.buffer.asUint8List());
-      body.writeln('<image x="${svgNum(dest.left)}" y="${svgNum(dest.top)}" '
+      qrBody.writeln('<image x="${svgNum(dest.left)}" y="${svgNum(dest.top)}" '
           'width="${svgNum(dest.width)}" height="${svgNum(dest.height)}" '
           'preserveAspectRatio="xMidYMid meet" '
           'href="data:image/png;base64,$b64"/>');
     }
+  }
+
+  final body = StringBuffer()
+    ..writeln('<rect width="${svgNum(size)}" height="${svgNum(size)}" '
+        '${fillAttr(style.background)}/>');
+  if (frameGeometry == null) {
+    body.write(qrBody);
+  } else {
+    body
+      ..writeln('<g transform="translate('
+          '${svgNum(frameGeometry.qrRect.left)} '
+          '${svgNum(frameGeometry.qrRect.top)})">')
+      ..write(qrBody)
+      ..writeln('</g>');
+    _writeFrame(body, frame!, frameGeometry);
   }
 
   return '<svg xmlns="http://www.w3.org/2000/svg" '
@@ -89,16 +112,69 @@ Future<String> buildQrSvg({
       '$body</svg>\n';
 }
 
-void _writeModules(
-  StringBuffer body,
-  QrLayout layout,
-  QrImageRenderData? imageData,
-  String Function(QrFill) fillAttr,
-) {
-  final code = layout.code;
-  final style = layout.style;
+String _escapeXml(String text) => text
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+
+void _writeFrame(StringBuffer body, QrFrame frame, QrFrameGeometry g) {
+  body.writeln('<rect x="${svgNum(g.outerRect.left)}" '
+      'y="${svgNum(g.outerRect.top)}" '
+      'width="${svgNum(g.outerRect.width)}" '
+      'height="${svgNum(g.outerRect.height)}" '
+      'rx="${svgNum(g.cornerRadius)}" fill="none" '
+      'stroke="${svgColorHex(frame.color)}" '
+      'stroke-width="${svgNum(g.strokeWidth)}"/>');
+
+  if (!g.hasBanner) return;
+
+  final r = Radius.circular(g.cornerRadius);
+  final bottom = frame.labelPosition == QrFrameLabelPosition.bottom;
+  final bannerPath = svgRRectPath(
+    g.bannerRect,
+    bottomLeft: bottom ? r : Radius.zero,
+    bottomRight: bottom ? r : Radius.zero,
+    topLeft: bottom ? Radius.zero : r,
+    topRight: bottom ? Radius.zero : r,
+  );
+  body.writeln('<path fill="${svgColorHex(frame.color)}" d="$bannerPath"/>');
+
+  final weight = (frame.fontWeight.index + 1) * 100;
+  final family = frame.fontFamily == null
+      ? 'Helvetica, Arial, sans-serif'
+      : '${frame.fontFamily}, Helvetica, Arial, sans-serif';
+  body.writeln('<text x="${svgNum(g.bannerRect.center.dx)}" '
+      'y="${svgNum(g.bannerRect.center.dy)}" '
+      'text-anchor="middle" dominant-baseline="central" '
+      'font-family="$family" font-size="${svgNum(g.fontSize)}" '
+      'font-weight="$weight" '
+      'letter-spacing="${svgNum(frame.letterSpacing)}" '
+      'fill="${svgColorHex(frame.textColor)}">'
+      '${_escapeXml(frame.text)}</text>');
+}
+
+class _ModulePaths {
   final shared = StringBuffer();
   final recolored = <Color, StringBuffer>{};
+
+  String get allPathData =>
+      shared.toString() + recolored.values.join();
+}
+
+class _EyePaths {
+  const _EyePaths(this.eye, this.frameData, this.pupilData);
+
+  final QrEyePosition eye;
+  final String frameData;
+  final String pupilData;
+}
+
+_ModulePaths _collectModulePaths(
+    QrLayout layout, QrImageRenderData? imageData) {
+  final code = layout.code;
+  final style = layout.style;
+  final paths = _ModulePaths();
 
   for (var row = 0; row < code.size; row++) {
     for (var col = 0; col < code.size; col++) {
@@ -108,14 +184,102 @@ void _writeModules(
       final neighbors = layout.neighborsOf(row, col);
       final override = imageData?.moduleColorResolver?.call(row, col);
       final target = override != null
-          ? recolored.putIfAbsent(override, StringBuffer.new)
-          : shared;
+          ? paths.recolored.putIfAbsent(override, StringBuffer.new)
+          : paths.shared;
       target.write(style.moduleShape.svgPath(rect, neighbors));
     }
   }
+  return paths;
+}
 
-  body.writeln('<path ${fillAttr(style.fill)} d="$shared"/>');
-  for (final entry in recolored.entries) {
+List<_EyePaths> _collectEyePaths(QrLayout layout) {
+  final style = layout.style;
+  return [
+    for (final eye in QrEyePosition.values)
+      _EyePaths(
+        eye,
+        style.eyeStyleFor(eye).frame.svgPath(
+            layout.eyeRect(eye), layout.moduleSize),
+        style.eyeStyleFor(eye).pupil.svgPath(
+            layout.eyeRect(eye).deflate(layout.moduleSize * 2),
+            layout.moduleSize),
+      ),
+  ];
+}
+
+/// The finder eyes carry the detector's module-size estimate; extrusion on
+/// them is capped (matching the canvas painter).
+const double _maxEyeExtrusion = 0.25;
+
+/// Emits extruded sides or a drop shadow beneath the dark geometry.
+/// Emboss is a raster-only effect and is skipped in SVG.
+void _writeEffect(StringBuffer body, StringBuffer defs, QrLayout layout,
+    _ModulePaths modules, List<_EyePaths> eyes) {
+  final effect = layout.style.effect;
+  if (effect is QrNoEffect || effect is QrEmbossEffect) return;
+
+  final eyeData = StringBuffer();
+  for (final eye in eyes) {
+    eyeData
+      ..write(eye.frameData)
+      ..write(eye.pupilData);
+  }
+  defs
+    ..writeln('<path id="qr-dark" d="${modules.allPathData}"/>')
+    ..writeln('<path id="qr-dark-eyes" fill-rule="evenodd" d="$eyeData"/>');
+
+  void emitUses(String id, double depthModules, Color side) {
+    final d = depthModules * layout.moduleSize;
+    const steps = 4;
+    for (var i = steps; i >= 1; i--) {
+      final o = svgNum(d * i / steps);
+      body.writeln('<use href="#$id" fill="${svgColorHex(side)}" '
+          'transform="translate($o $o)"/>');
+    }
+  }
+
+  switch (effect) {
+    case QrExtrudedEffect(:final depth, :final color):
+      final side = color ??
+          _darkenColor(layout.style.fill.representativeColor, 0.45);
+      emitUses('qr-dark', depth, side);
+      emitUses('qr-dark-eyes',
+          depth > _maxEyeExtrusion ? _maxEyeExtrusion : depth, side);
+    case QrShadowEffect(:final blur, :final offset, :final color):
+      if (blur > 0) {
+        final dev = svgNum(blur * layout.moduleSize / 2);
+        defs.writeln('<filter id="qr-blur" x="-30%" y="-30%" '
+            'width="160%" height="160%">'
+            '<feGaussianBlur stdDeviation="$dev"/></filter>');
+      }
+      final dx = svgNum(offset.dx * layout.moduleSize);
+      final dy = svgNum(offset.dy * layout.moduleSize);
+      final filter = blur > 0 ? 'filter="url(#qr-blur)" ' : '';
+      for (final id in ['qr-dark', 'qr-dark-eyes']) {
+        body.writeln('<use href="#$id" fill="${svgColorHex(color)}" '
+            'fill-opacity="${svgNum(color.a)}" $filter'
+            'transform="translate($dx $dy)"/>');
+      }
+    case QrNoEffect() || QrEmbossEffect():
+      break;
+  }
+}
+
+Color _darkenColor(Color color, double amount) => Color.from(
+      alpha: color.a,
+      red: color.r * (1 - amount),
+      green: color.g * (1 - amount),
+      blue: color.b * (1 - amount),
+    );
+
+void _writeModules(
+  StringBuffer body,
+  QrLayout layout,
+  _ModulePaths paths,
+  String Function(QrFill) fillAttr,
+) {
+  body.writeln('<path ${fillAttr(layout.style.fill)} d="${paths.shared}"/>');
+  for (final entry in paths.recolored.entries) {
     body.writeln('<path fill="${svgColorHex(entry.key)}" d="${entry.value}"/>');
   }
 }
@@ -151,19 +315,17 @@ void _writeHalftone(
 }
 
 void _writeEyes(
-    StringBuffer body, QrLayout layout, String Function(QrFill) fillAttr) {
+    StringBuffer body, QrLayout layout, String Function(QrFill) fillAttr,
+    {List<_EyePaths>? collected}) {
   final style = layout.style;
-  for (final eye in QrEyePosition.values) {
-    final eyeStyle = style.eyeStyleFor(eye);
-    final outer = layout.eyeRect(eye);
-    final frame = eyeStyle.frame.svgPath(outer, layout.moduleSize);
+  final eyes = collected ?? _collectEyePaths(layout);
+  for (final paths in eyes) {
+    final eyeStyle = style.eyeStyleFor(paths.eye);
     body.writeln('<path fill-rule="evenodd" '
-        '${fillAttr(eyeStyle.frameFill ?? style.fill)} d="$frame"/>');
-    final pupilRect = outer.deflate(layout.moduleSize * 2);
-    final pupil = eyeStyle.pupil.svgPath(pupilRect, layout.moduleSize);
+        '${fillAttr(eyeStyle.frameFill ?? style.fill)} d="${paths.frameData}"/>');
     body.writeln(
         '<path ${fillAttr(eyeStyle.pupilFill ?? eyeStyle.frameFill ?? style.fill)} '
-        'd="$pupil"/>');
+        'd="${paths.pupilData}"/>');
   }
 }
 

@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.2.0
+
+* **Payload builders** — `QrData.wifi / vCard / email / sms / phone /
+  whatsapp / geo / event` with correct escaping, so WiFi-login and
+  add-contact codes are one-liners.
+* **Decorative frames** — `QrFrame`: rounded border + "SCAN ME" label
+  banner (top or bottom), rendered by the widget, PNG, and SVG exports.
+* **3D depth effects** — `QrEffect.extruded` (isometric blocks),
+  `QrEffect.shadow` (floating sticker), and `QrEffect.emboss` (bevel
+  lighting, raster-only). Extrusion on the finder eyes is automatically
+  capped to keep detectors happy, and the scan guard flags risky
+  depth/scale combinations.
+* **Style presets** — `QrStylePresets` with 8 curated, decode-verified
+  looks (`ocean`, `sunset`, `forest`, `candy`, `paper`, `blocks3d`,
+  `neon`, `classic`).
+* **JSON styles** — `QrStyle.toJson()/fromJson()` (plus fills, shapes,
+  effects, frames) so designs can be saved, shared, and used as templates.
+* **Animated QR widget** — `AnimatedArtisticQrCode` with `gradientSweep`,
+  `reveal`, and `pulse` effects; resting states are always fully scannable.
+
 ## 0.1.0
 
 Initial release.

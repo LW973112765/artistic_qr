@@ -10,9 +10,13 @@ void main() {
     addTearDown(tester.view.reset);
 
     await tester.pumpWidget(const GalleryApp());
-    await tester.pumpAndSettle();
+    // pumpAndSettle would never settle: the animated demos loop forever.
+    for (var i = 0; i < 8; i++) {
+      await tester.pump(const Duration(milliseconds: 250));
+      expect(tester.takeException(), isNull, reason: 'exception at frame $i');
+    }
 
     expect(find.byType(ArtisticQrCode), findsWidgets);
-    expect(tester.takeException(), isNull);
+    expect(find.byType(AnimatedArtisticQrCode), findsWidgets);
   });
 }

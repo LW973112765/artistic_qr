@@ -6,6 +6,7 @@ import 'image/qr_image.dart';
 import 'image/qr_image_renderer.dart';
 import 'render/qr_painter.dart';
 import 'render/svg_export.dart';
+import 'style/qr_frame.dart';
 import 'style/qr_style.dart';
 import 'validate/scan_guard.dart';
 
@@ -25,10 +26,12 @@ import 'validate/scan_guard.dart';
 /// final png = await qr.toPngBytes(pixelSize: 2048);
 /// ```
 class ArtisticQr {
-  ArtisticQr._(this.code, this.style, this.imageData, this.resolvedImage);
+  ArtisticQr._(
+      this.code, this.style, this.frame, this.imageData, this.resolvedImage);
 
   final QrCode code;
   final QrStyle style;
+  final QrFrame? frame;
   final QrImageRenderData? imageData;
   final ResolvedQrImage? resolvedImage;
 
@@ -41,6 +44,7 @@ class ArtisticQr {
     required String data,
     QrErrorCorrection errorCorrection = QrErrorCorrection.quartile,
     QrStyle style = const QrStyle(),
+    QrFrame? frame,
     QrImage? image,
     int minVersion = 1,
     int maxVersion = 40,
@@ -56,7 +60,7 @@ class ArtisticQr {
       resolved = ResolvedQrImage(pixels: pixels, mode: image.mode);
       imageData = buildImageRenderData(code: code, style: style, image: resolved);
     }
-    final qr = ArtisticQr._(code, style, imageData, resolved);
+    final qr = ArtisticQr._(code, style, frame, imageData, resolved);
     assert(() {
       for (final warning in qr.validate()) {
         debugPrint('artistic_qr: $warning');
@@ -74,8 +78,9 @@ class ArtisticQr {
   QrPainter get painter {
     final data = imageData;
     return data == null
-        ? QrPainter(code: code, style: style)
-        : QrPainter.withImage(code: code, style: style, imageData: data);
+        ? QrPainter(code: code, style: style, frame: frame)
+        : QrPainter.withImage(
+            code: code, style: style, frame: frame, imageData: data);
   }
 
   /// Renders to PNG at [pixelSize]×[pixelSize] pixels.
@@ -88,6 +93,7 @@ class ArtisticQr {
   Future<String> toSvg({double size = 512}) => buildQrSvg(
         code: code,
         style: style,
+        frame: frame,
         imageData: imageData,
         resolvedImage: resolvedImage,
         size: size,

@@ -31,6 +31,25 @@ abstract class EyeFrameShape {
     addPath(path, outer, moduleSize);
     return svgFromUiPath(path);
   }
+
+  Map<String, dynamic> toJson() =>
+      throw UnsupportedError('$runtimeType cannot be serialized to JSON');
+
+  static EyeFrameShape fromJson(Map<String, dynamic> json) {
+    switch (json['type']) {
+      case 'square':
+        return square;
+      case 'rounded':
+        return EyeFrameShape.rounded(
+            radius: (json['radius'] as num).toDouble());
+      case 'circle':
+        return circle;
+      case 'leaf':
+        return leaf;
+      default:
+        throw FormatException('Unknown eye frame shape: ${json['type']}');
+    }
+  }
 }
 
 /// The 3×3-module pupil at the center of a finder eye.
@@ -53,6 +72,25 @@ abstract class EyePupilShape {
     addPath(path, rect, moduleSize);
     return svgFromUiPath(path);
   }
+
+  Map<String, dynamic> toJson() =>
+      throw UnsupportedError('$runtimeType cannot be serialized to JSON');
+
+  static EyePupilShape fromJson(Map<String, dynamic> json) {
+    switch (json['type']) {
+      case 'square':
+        return square;
+      case 'rounded':
+        return EyePupilShape.rounded(
+            radius: (json['radius'] as num).toDouble());
+      case 'circle':
+        return circle;
+      case 'leaf':
+        return leaf;
+      default:
+        throw FormatException('Unknown eye pupil shape: ${json['type']}');
+    }
+  }
 }
 
 Rect _innerHole(Rect outer, double moduleSize) =>
@@ -72,6 +110,9 @@ class _SquareFrame extends EyeFrameShape {
   @override
   String svgPath(Rect outer, double moduleSize) =>
       svgRectPath(outer) + svgRectPath(_innerHole(outer, moduleSize));
+
+  @override
+  Map<String, dynamic> toJson() => {'type': 'square'};
 }
 
 class _RoundedFrame extends EyeFrameShape {
@@ -102,6 +143,9 @@ class _RoundedFrame extends EyeFrameShape {
         svgRRectPath(inner,
             topLeft: ri, topRight: ri, bottomRight: ri, bottomLeft: ri);
   }
+
+  @override
+  Map<String, dynamic> toJson() => {'type': 'rounded', 'radius': radius};
 }
 
 class _CircleFrame extends EyeFrameShape {
@@ -118,6 +162,9 @@ class _CircleFrame extends EyeFrameShape {
   @override
   String svgPath(Rect outer, double moduleSize) =>
       svgOvalPath(outer) + svgOvalPath(_innerHole(outer, moduleSize));
+
+  @override
+  Map<String, dynamic> toJson() => {'type': 'circle'};
 }
 
 class _LeafFrame extends EyeFrameShape {
@@ -144,6 +191,9 @@ class _LeafFrame extends EyeFrameShape {
     return svgRRectPath(outer, topRight: r, bottomLeft: r) +
         svgRRectPath(inner, topRight: ri, bottomLeft: ri);
   }
+
+  @override
+  Map<String, dynamic> toJson() => {'type': 'leaf'};
 }
 
 class _SquarePupil extends EyePupilShape {
@@ -156,6 +206,9 @@ class _SquarePupil extends EyePupilShape {
 
   @override
   String svgPath(Rect rect, double moduleSize) => svgRectPath(rect);
+
+  @override
+  Map<String, dynamic> toJson() => {'type': 'square'};
 }
 
 class _RoundedPupil extends EyePupilShape {
@@ -175,6 +228,9 @@ class _RoundedPupil extends EyePupilShape {
     return svgRRectPath(rect,
         topLeft: r, topRight: r, bottomRight: r, bottomLeft: r);
   }
+
+  @override
+  Map<String, dynamic> toJson() => {'type': 'rounded', 'radius': radius};
 }
 
 class _CirclePupil extends EyePupilShape {
@@ -187,6 +243,9 @@ class _CirclePupil extends EyePupilShape {
 
   @override
   String svgPath(Rect rect, double moduleSize) => svgOvalPath(rect);
+
+  @override
+  Map<String, dynamic> toJson() => {'type': 'circle'};
 }
 
 class _LeafPupil extends EyePupilShape {
@@ -203,4 +262,7 @@ class _LeafPupil extends EyePupilShape {
     final r = Radius.circular(rect.width * 0.5);
     return svgRRectPath(rect, topRight: r, bottomLeft: r);
   }
+
+  @override
+  Map<String, dynamic> toJson() => {'type': 'leaf'};
 }

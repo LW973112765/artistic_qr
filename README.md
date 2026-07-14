@@ -18,6 +18,17 @@ pretty never means unscannable.
 
 ## Features
 
+* 📦 **Payload builders** — `QrData.wifi(...)`, `.vCard(...)`, `.whatsapp(...)`,
+  `.email(...)`, `.sms(...)`, `.geo(...)`, `.event(...)` with correct escaping.
+* 🏷 **Frames** — `QrFrame`: rounded border + "SCAN ME" banner, in the
+  widget, PNG, and SVG exports alike.
+* 🧊 **3D effects** — `QrEffect.extruded` (isometric blocks), `.shadow`
+  (floating sticker), `.emboss` (bevel lighting).
+* 🎞 **Animation** — `AnimatedArtisticQrCode` with gradient sweep, module
+  reveal, and pulse effects (resting state always scans).
+* 🎨 **Presets & JSON styles** — 8 curated `QrStylePresets`, and
+  `QrStyle.toJson()/fromJson()` for saving and sharing designs.
+
 * 🎨 **Module shapes** — square, circle, rounded, diamond, star, classy,
   neighbor-connected *fluid*, vertical/horizontal bars, or bring your own
   `ModuleShape.custom(...)`.
@@ -102,6 +113,42 @@ ArtisticQrCode(
 )
 ```
 
+### WiFi / vCard / WhatsApp payloads
+
+```dart
+ArtisticQrCode(data: QrData.wifi(ssid: 'CoffeeShop', password: 'espresso42'))
+ArtisticQrCode(data: QrData.vCard(name: 'Dana Deaa', mobile: '+123456789'))
+ArtisticQrCode(data: QrData.whatsapp(phone: '15550001111', text: 'Hi!'))
+```
+
+### Frames, 3D effects, presets, animation
+
+```dart
+// "SCAN ME" frame + curated preset:
+ArtisticQrCode(
+  data: url,
+  style: QrStylePresets.ocean,
+  frame: QrFrame(text: 'SCAN ME', color: Color(0xFF006064)),
+)
+
+// Isometric 3D blocks (or .shadow / .emboss):
+ArtisticQrCode(
+  data: url,
+  style: QrStyle(moduleScale: 0.72, effect: QrEffect.extruded(depth: 0.4)),
+)
+
+// Animated (gradientSweep / reveal / pulse):
+AnimatedArtisticQrCode(
+  data: url,
+  effect: QrAnimationEffect.gradientSweep,
+  style: QrStylePresets.candy,
+)
+
+// Save & restore designs as JSON:
+final json = jsonEncode(style.toJson());
+final restored = QrStyle.fromJson(jsonDecode(json));
+```
+
 ### Headless export (PNG / SVG)
 
 ```dart
@@ -135,9 +182,14 @@ package keeps you safe by default:
 
 | Type | What it does |
 |---|---|
-| `ArtisticQrCode` | The widget: `data`, `style`, `image`, `errorBuilder` |
+| `ArtisticQrCode` | The widget: `data`, `style`, `frame`, `image`, `errorBuilder` |
+| `AnimatedArtisticQrCode` | Animated variant: `gradientSweep`, `reveal`, `pulse` |
 | `ArtisticQr` | Headless: `create` → `toPngBytes` / `toSvg` / `validate` |
-| `QrStyle` | `moduleShape`, `moduleScale`, `fill`, `eyeStyle(+Overrides)`, `background`, `quietZone` |
+| `QrData` | Payload builders: `wifi`, `vCard`, `email`, `sms`, `whatsapp`, `geo`, `event` |
+| `QrStyle` | `moduleShape`, `moduleScale`, `fill`, `eyeStyle(+Overrides)`, `background`, `quietZone`, `effect` + `toJson`/`fromJson` |
+| `QrStylePresets` | 8 curated decode-verified styles |
+| `QrFrame` | Border + "SCAN ME" label banner |
+| `QrEffect` | `extruded`, `shadow`, `emboss` 3D looks |
 | `ModuleShape` | `square·circle·rounded·diamond·star·classy·fluid·bars·custom` |
 | `EyeFrameShape` / `EyePupilShape` | `square·rounded·circle·leaf` |
 | `QrFill` | `solid`, `linearGradient`, `radialGradient`, `sweepGradient` |

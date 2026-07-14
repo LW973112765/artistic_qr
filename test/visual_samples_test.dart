@@ -122,5 +122,42 @@ void main() {
         ),
       ),
     );
+
+    // v0.2 features.
+    await save(
+      '6_frame_scan_me',
+      await ArtisticQr.create(
+        data: url,
+        style: QrStylePresets.ocean,
+        frame: const QrFrame(color: Color(0xFF006064)),
+      ),
+    );
+
+    await save(
+      '7_blocks_3d_extruded',
+      await ArtisticQr.create(data: url, style: QrStylePresets.blocks3d),
+    );
+
+    await save(
+      '8_shadow_paper',
+      await ArtisticQr.create(data: url, style: QrStylePresets.paper),
+    );
+
+    await save(
+      '9_emboss',
+      await ArtisticQr.create(
+        data: url,
+        style: const QrStyle(
+          moduleShape: ModuleShape.rounded(),
+          moduleScale: 0.92,
+          fill: QrFill.solid(Color(0xFF37474F)),
+          effect: QrEffect.emboss(),
+          eyeStyle: QrEyeStyle(
+            frame: EyeFrameShape.rounded(),
+            pupil: EyePupilShape.rounded(),
+          ),
+        ),
+      ),
+    );
   }, tags: ['samples'], timeout: const Timeout(Duration(minutes: 3)));
 }

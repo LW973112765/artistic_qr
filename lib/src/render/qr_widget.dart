@@ -4,6 +4,7 @@ import '../encoder/qr_encoder.dart';
 import '../encoder/tables.dart';
 import '../image/qr_image.dart';
 import '../image/qr_image_renderer.dart';
+import '../style/qr_frame.dart';
 import '../style/qr_style.dart';
 import 'qr_painter.dart';
 
@@ -26,6 +27,7 @@ class ArtisticQrCode extends StatefulWidget {
     this.size,
     this.errorCorrection = QrErrorCorrection.quartile,
     this.style = const QrStyle(),
+    this.frame,
     this.image,
     this.errorBuilder,
     this.semanticsLabel,
@@ -39,6 +41,9 @@ class ArtisticQrCode extends StatefulWidget {
 
   final QrErrorCorrection errorCorrection;
   final QrStyle style;
+
+  /// Optional decorative border + "SCAN ME" banner around the code.
+  final QrFrame? frame;
 
   /// Optional embedded image (logo, color blend, or halftone photo).
   /// While the image loads, the plain styled code is shown.
@@ -127,9 +132,12 @@ class _ArtisticQrCodeState extends State<ArtisticQrCode> {
             ? Size.square(widget.size!)
             : Size.infinite,
         painter: imageData == null
-            ? QrPainter(code: _code!, style: widget.style)
+            ? QrPainter(code: _code!, style: widget.style, frame: widget.frame)
             : QrPainter.withImage(
-                code: _code!, style: widget.style, imageData: imageData),
+                code: _code!,
+                style: widget.style,
+                frame: widget.frame,
+                imageData: imageData),
       ),
     );
   }

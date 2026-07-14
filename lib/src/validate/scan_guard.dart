@@ -3,6 +3,7 @@ import 'package:flutter/painting.dart';
 import '../encoder/qr_encoder.dart';
 import '../encoder/tables.dart';
 import '../image/qr_image.dart';
+import '../style/qr_effect.dart';
 import '../style/qr_fill.dart';
 import '../style/qr_style.dart';
 
@@ -62,7 +63,21 @@ List<QrScanWarning> validateQrDesign({
     ));
   }
 
-  // 4. Image modes vs error correction.
+  // 4. Deep extrusion with large modules bridges neighbors and breaks the
+  //    detector's dimension estimation.
+  final effect = style.effect;
+  if (effect is QrExtrudedEffect &&
+      effect.depth > 0.35 &&
+      style.moduleScale > 0.8) {
+    warnings.add(QrScanWarning(
+      'extrusion-overlap',
+      'Extrusion depth ${effect.depth} with moduleScale ${style.moduleScale} '
+          'lets the 3D sides touch neighboring modules. Use moduleScale '
+          '≤ 0.8 with deep extrusion (or depth ≤ 0.35).',
+    ));
+  }
+
+  // 5. Image modes vs error correction.
   switch (imageMode) {
     case QrLogoMode(:final scale, :final knockout):
       final ec = ecBlocksFor(code.version, code.errorCorrection);

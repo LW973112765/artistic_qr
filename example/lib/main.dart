@@ -235,7 +235,91 @@ class GalleryPage extends StatelessWidget {
               ),
             },
           ),
-          image: QrImage(source: QrImageSource.asset('assets/IMG_056346.JPG.jpeg'), mode: const QrImageMode.blend()),
+          image: QrImage(source: QrImageSource.asset('assets/cr7.png'), mode: const QrImageMode.blend()),
+        ),
+      ),
+
+      // ---- v0.2 features ----
+      Demo(
+        'WiFi payload',
+        subtitle: 'QrData.wifi — scanning joins the network',
+        ArtisticQrCode(
+          data: QrData.wifi(ssid: 'CoffeeShop', password: 'espresso42'),
+          style: QrStylePresets.ocean,
+        ),
+      ),
+      const Demo(
+        '"Scan me" frame',
+        subtitle: 'QrFrame — border + label banner',
+        ArtisticQrCode(
+          data: _url,
+          frame: QrFrame(color: Color(0xFF006064)),
+          style: QrStyle(
+            moduleShape: ModuleShape.fluid,
+            fill: QrFill.solid(Color(0xFF006064)),
+            eyeStyle: QrEyeStyle(
+              frame: EyeFrameShape.rounded(),
+              pupil: EyePupilShape.rounded(),
+            ),
+          ),
+        ),
+      ),
+      Demo(
+        '3D blocks',
+        subtitle: 'QrEffect.extruded — isometric look',
+        ArtisticQrCode(data: _url, style: QrStylePresets.blocks3d),
+      ),
+      Demo(
+        'Floating sticker',
+        subtitle: 'QrEffect.shadow',
+        ArtisticQrCode(data: _url, style: QrStylePresets.paper),
+      ),
+      const Demo(
+        'Embossed buttons',
+        subtitle: 'QrEffect.emboss — raster only',
+        ArtisticQrCode(
+          data: _url,
+          style: QrStyle(
+            moduleShape: ModuleShape.rounded(),
+            moduleScale: 0.92,
+            fill: QrFill.solid(Color(0xFF37474F)),
+            effect: QrEffect.emboss(),
+            eyeStyle: QrEyeStyle(
+              frame: EyeFrameShape.rounded(),
+              pupil: EyePupilShape.rounded(),
+            ),
+          ),
+        ),
+      ),
+      Demo(
+        'Preset: sunset',
+        subtitle: 'QrStylePresets — 8 ready-made styles',
+        ArtisticQrCode(data: _url, style: QrStylePresets.sunset),
+      ),
+      Demo(
+        'Animated gradient sweep',
+        subtitle: 'AnimatedArtisticQrCode',
+        AnimatedArtisticQrCode(
+          data: _url,
+          effect: QrAnimationEffect.gradientSweep,
+          style: QrStylePresets.candy,
+        ),
+      ),
+      const Demo(
+        'Animated reveal',
+        AnimatedArtisticQrCode(
+          data: _url,
+          effect: QrAnimationEffect.reveal,
+          duration: Duration(seconds: 2),
+          repeat: true,
+        ),
+      ),
+      Demo(
+        'Animated pulse',
+        AnimatedArtisticQrCode(
+          data: _url,
+          effect: QrAnimationEffect.pulse,
+          style: QrStylePresets.neon,
         ),
       ),
     ];

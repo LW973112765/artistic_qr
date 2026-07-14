@@ -3,6 +3,7 @@ import 'package:flutter/painting.dart';
 import '../encoder/matrix.dart';
 import 'eye_shape.dart';
 import 'module_shape.dart';
+import 'qr_effect.dart';
 import 'qr_fill.dart';
 
 /// Styling for the three finder "eyes".
@@ -35,6 +36,24 @@ class QrEyeStyle {
         frameFill: frameFill ?? this.frameFill,
         pupilFill: pupilFill ?? this.pupilFill,
       );
+
+  Map<String, dynamic> toJson() => {
+        'frame': frame.toJson(),
+        'pupil': pupil.toJson(),
+        'frameFill': frameFill?.toJson(),
+        'pupilFill': pupilFill?.toJson(),
+      };
+
+  factory QrEyeStyle.fromJson(Map<String, dynamic> json) => QrEyeStyle(
+        frame: EyeFrameShape.fromJson(json['frame'] as Map<String, dynamic>),
+        pupil: EyePupilShape.fromJson(json['pupil'] as Map<String, dynamic>),
+        frameFill: json['frameFill'] == null
+            ? null
+            : QrFill.fromJson(json['frameFill'] as Map<String, dynamic>),
+        pupilFill: json['pupilFill'] == null
+            ? null
+            : QrFill.fromJson(json['pupilFill'] as Map<String, dynamic>),
+      );
 }
 
 /// The complete visual configuration of a QR code.
@@ -51,6 +70,7 @@ class QrStyle {
     this.eyeStyleOverrides = const {},
     this.background = const QrFill.solid(Color(0xFFFFFFFF)),
     this.quietZone = 4,
+    this.effect = QrEffect.none,
   })  : assert(moduleScale > 0 && moduleScale <= 1),
         assert(quietZone >= 0);
 
@@ -78,6 +98,9 @@ class QrStyle {
   /// don't go below 2 if you want reliable scanning.
   final int quietZone;
 
+  /// Pseudo-3D depth effect (extruded blocks, drop shadow, or emboss).
+  final QrEffect effect;
+
   QrEyeStyle eyeStyleFor(QrEyePosition position) =>
       eyeStyleOverrides[position] ?? eyeStyle;
 
@@ -89,6 +112,7 @@ class QrStyle {
     Map<QrEyePosition, QrEyeStyle>? eyeStyleOverrides,
     QrFill? background,
     int? quietZone,
+    QrEffect? effect,
   }) =>
       QrStyle(
         moduleShape: moduleShape ?? this.moduleShape,
@@ -98,5 +122,42 @@ class QrStyle {
         eyeStyleOverrides: eyeStyleOverrides ?? this.eyeStyleOverrides,
         background: background ?? this.background,
         quietZone: quietZone ?? this.quietZone,
+        effect: effect ?? this.effect,
+      );
+
+  /// Serializes the whole style so designs can be stored, shared, or
+  /// edited as templates. Throws [UnsupportedError] for custom
+  /// (callback-based) module shapes.
+  Map<String, dynamic> toJson() => {
+        'moduleShape': moduleShape.toJson(),
+        'moduleScale': moduleScale,
+        'fill': fill.toJson(),
+        'eyeStyle': eyeStyle.toJson(),
+        'eyeStyleOverrides': {
+          for (final entry in eyeStyleOverrides.entries)
+            entry.key.name: entry.value.toJson(),
+        },
+        'background': background.toJson(),
+        'quietZone': quietZone,
+        'effect': effect.toJson(),
+      };
+
+  factory QrStyle.fromJson(Map<String, dynamic> json) => QrStyle(
+        moduleShape:
+            ModuleShape.fromJson(json['moduleShape'] as Map<String, dynamic>),
+        moduleScale: (json['moduleScale'] as num).toDouble(),
+        fill: QrFill.fromJson(json['fill'] as Map<String, dynamic>),
+        eyeStyle:
+            QrEyeStyle.fromJson(json['eyeStyle'] as Map<String, dynamic>),
+        eyeStyleOverrides: {
+          for (final entry
+              in (json['eyeStyleOverrides'] as Map<String, dynamic>).entries)
+            QrEyePosition.values.byName(entry.key):
+                QrEyeStyle.fromJson(entry.value as Map<String, dynamic>),
+        },
+        background:
+            QrFill.fromJson(json['background'] as Map<String, dynamic>),
+        quietZone: json['quietZone'] as int,
+        effect: QrEffect.fromJson(json['effect'] as Map<String, dynamic>),
       );
 }

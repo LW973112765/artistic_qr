@@ -47,6 +47,45 @@ sealed class QrFill {
 
   /// A representative color (used for contrast checks and SVG fallbacks).
   Color get representativeColor;
+
+  /// Serializes this fill. Gradients support linear/radial/sweep with
+  /// [Alignment] geometry; anything else throws [UnsupportedError].
+  Map<String, dynamic> toJson();
+
+  static QrFill fromJson(Map<String, dynamic> json) {
+    List<Color> colors() =>
+        [for (final v in json['colors'] as List) Color(v as int)];
+    List<double>? stops() => json['stops'] == null
+        ? null
+        : [for (final v in json['stops'] as List) (v as num).toDouble()];
+    Alignment point(String key) {
+      final list = json[key] as List;
+      return Alignment(
+          (list[0] as num).toDouble(), (list[1] as num).toDouble());
+    }
+
+    switch (json['type']) {
+      case 'solid':
+        return QrSolidFill(Color(json['color'] as int));
+      case 'linear':
+        return QrGradientFill(LinearGradient(
+            colors: colors(),
+            stops: stops(),
+            begin: point('begin'),
+            end: point('end')));
+      case 'radial':
+        return QrGradientFill(RadialGradient(
+            colors: colors(),
+            stops: stops(),
+            center: point('center'),
+            radius: (json['radius'] as num).toDouble()));
+      case 'sweep':
+        return QrGradientFill(SweepGradient(
+            colors: colors(), stops: stops(), center: point('center')));
+      default:
+        throw FormatException('Unknown fill type: ${json['type']}');
+    }
+  }
 }
 
 class QrSolidFill extends QrFill {
@@ -63,6 +102,10 @@ class QrSolidFill extends QrFill {
 
   @override
   Color get representativeColor => color;
+
+  @override
+  Map<String, dynamic> toJson() =>
+      {'type': 'solid', 'color': color.toARGB32()};
 
   @override
   bool operator ==(Object other) => other is QrSolidFill && other.color == color;
@@ -83,6 +126,47 @@ class QrGradientFill extends QrFill {
 
   @override
   Color get representativeColor => gradient.colors.first;
+
+  @override
+  Map<String, dynamic> toJson() {
+    List<int> colors() => [for (final c in gradient.colors) c.toARGB32()];
+    List<double> point(AlignmentGeometry alignment) {
+      if (alignment is! Alignment) {
+        throw UnsupportedError(
+            'Only Alignment geometry can be serialized (got $alignment)');
+      }
+      return [alignment.x, alignment.y];
+    }
+
+    switch (gradient) {
+      case LinearGradient(:final begin, :final end):
+        return {
+          'type': 'linear',
+          'colors': colors(),
+          'stops': gradient.stops,
+          'begin': point(begin),
+          'end': point(end),
+        };
+      case RadialGradient(:final center, :final radius):
+        return {
+          'type': 'radial',
+          'colors': colors(),
+          'stops': gradient.stops,
+          'center': point(center),
+          'radius': radius,
+        };
+      case SweepGradient(:final center):
+        return {
+          'type': 'sweep',
+          'colors': colors(),
+          'stops': gradient.stops,
+          'center': point(center),
+        };
+      default:
+        throw UnsupportedError(
+            '${gradient.runtimeType} cannot be serialized to JSON');
+    }
+  }
 
   @override
   bool operator ==(Object other) =>
