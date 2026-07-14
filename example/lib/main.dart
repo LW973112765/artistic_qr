@@ -197,9 +197,7 @@ class GalleryPage extends StatelessWidget {
             },
           ),
           image: QrImage(
-            source: QrImageSource.network(
-              'https://www.celebrity-cutouts.co.uk/wp-content/uploads/2024/01/cristiano-ronaldo-young.jpg',
-            ),
+            source: QrImageSource.asset('assets/cr7.png'),
             mode: const QrImageMode.halftone(colored: true),
           ),
         ),
@@ -236,6 +234,60 @@ class GalleryPage extends StatelessWidget {
             },
           ),
           image: QrImage(source: QrImageSource.asset('assets/cr7.png'), mode: const QrImageMode.blend()),
+        ),
+      ),
+      Demo(
+        'Al-Karamah crest blend',
+        subtitle: 'club colors woven into the modules',
+        ArtisticQrCode(
+          data: _url,
+          errorCorrection: QrErrorCorrection.high,
+          style: const QrStyle(
+            moduleShape: ModuleShape.circle,
+            fill: QrFill.solid(Color(0xFF1A237E)),
+            eyeStyle: QrEyeStyle(
+              frame: EyeFrameShape.rounded(),
+              pupil: EyePupilShape.circle,
+              frameFill: QrFill.solid(Color(0xFFE65100)),
+              pupilFill: QrFill.solid(Color(0xFF1A237E)),
+            ),
+          ),
+          image: QrImage(
+            source: QrImageSource.asset('assets/alkarama.png'),
+            mode: const QrImageMode.blend(),
+          ),
+        ),
+      ),
+      Demo(
+        'Al-Karamah center logo',
+        ArtisticQrCode(
+          data: _url,
+          errorCorrection: QrErrorCorrection.high,
+          style: const QrStyle(
+            moduleShape: ModuleShape.rounded(),
+            fill: QrFill.solid(Color(0xFF1A237E)),
+            eyeStyle: QrEyeStyle(
+              frame: EyeFrameShape.rounded(),
+              pupil: EyePupilShape.rounded(),
+              frameFill: QrFill.solid(Color(0xFFE65100)),
+            ),
+          ),
+          image: QrImage(
+            source: QrImageSource.asset('assets/alkarama.png'),
+            mode: const QrImageMode.logo(scale: 0.24),
+          ),
+        ),
+      ),
+      Demo(
+        'CR7 halftone',
+        subtitle: 'the "face in the code" effect',
+        ArtisticQrCode(
+          data: _url,
+          errorCorrection: QrErrorCorrection.high,
+          image: QrImage(
+            source: QrImageSource.asset('assets/cr7.png'),
+            mode: const QrImageMode.halftone(),
+          ),
         ),
       ),
 
