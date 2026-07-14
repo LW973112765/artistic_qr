@@ -4,7 +4,18 @@ description: >-
   shapes, gradients, and logo / color-blend / halftone photo image modes.
   Zero runtime dependencies — includes its own QR encoder.
 version: 0.2.0
+homepage: https://github.com/deaa-jahjah/artistic_qr
 repository: https://github.com/deaa-jahjah/artistic_qr
+issue_tracker: https://github.com/deaa-jahjah/artistic_qr/issues
+license: MIT
+
+screenshots:
+  - description: "Colored halftone QR code"
+    path: doc/hero_halftone.png
+  - description: "Logo color blend QR code"
+    path: doc/hero_blend.png
+  - description: "Scan me frame QR code"
+    path: doc/hero_frame.png
 
 environment:
   sdk: ^3.10.4
