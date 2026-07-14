@@ -1,0 +1,4 @@
+tags:
+  # Visual sample generation (writes PNGs to build/visual_samples for
+  # human review). Run alone with: flutter test --tags samples
+  samples:

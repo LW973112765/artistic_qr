@@ -1,0 +1,9 @@
+# Internal / development files not shipped with the package.
+MONETIZATION.md
+atatchments/
+tool/
+doc/
+build/
+test/visual_samples_test.dart
+.idea/
+*.iml

@@ -1,0 +1,33 @@
+name: artistic_qr
+description: >-
+  High-quality, fully customizable artistic QR codes: custom module & eye
+  shapes, gradients, and logo / color-blend / halftone photo image modes.
+  Zero runtime dependencies — includes its own QR encoder.
+version: 0.1.0
+repository: https://github.com/deaa-jahjah/artistic_qr
+
+environment:
+  sdk: ^3.10.4
+  flutter: ">=3.24.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  # Test-only: decoder used to verify generated codes are scannable.
+  zxing2: ^0.2.3
+  # Test-only: PNG decoding for round-trip tests.
+  image: ^4.3.0
+  # Test-only: SVG well-formedness checks.
+  xml: ^6.5.0
+
+topics:
+  - qr
+  - qr-code
+  - widgets
+  - barcode
+  - image
