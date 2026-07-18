@@ -1,9 +1,8 @@
 name: artistic_qr
 description: >-
-  High-quality, fully customizable artistic QR codes: custom module & eye
-  shapes, gradients, and logo / color-blend / halftone photo image modes.
-  Zero runtime dependencies — includes its own QR encoder.
-version: 1.0.0
+  Customizable artistic QR codes with module shapes, gradients, image
+  halftone, logo blend, 3D effects, animation, and zero dependencies.
+version: 1.0.1
 homepage: https://github.com/deaa-jahjah/artistic_qr
 repository: https://github.com/deaa-jahjah/artistic_qr
 issue_tracker: https://github.com/deaa-jahjah/artistic_qr/issues

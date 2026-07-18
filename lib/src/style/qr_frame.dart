@@ -61,7 +61,7 @@ class QrFrame {
         'cornerRadius': cornerRadius,
         'labelHeight': labelHeight,
         'fontFamily': fontFamily,
-        'fontWeight': fontWeight.index,
+        'fontWeight': fontWeight.value,
         'letterSpacing': letterSpacing,
       };
 
@@ -75,7 +75,7 @@ class QrFrame {
         cornerRadius: (json['cornerRadius'] as num).toDouble(),
         labelHeight: (json['labelHeight'] as num).toDouble(),
         fontFamily: json['fontFamily'] as String?,
-        fontWeight: FontWeight.values[json['fontWeight'] as int],
+        fontWeight: FontWeight.values[((json['fontWeight'] as int) ~/ 100) - 1],
         letterSpacing: (json['letterSpacing'] as num).toDouble(),
       );
 

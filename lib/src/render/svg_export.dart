@@ -140,7 +140,7 @@ void _writeFrame(StringBuffer body, QrFrame frame, QrFrameGeometry g) {
   );
   body.writeln('<path fill="${svgColorHex(frame.color)}" d="$bannerPath"/>');
 
-  final weight = (frame.fontWeight.index + 1) * 100;
+  final weight = frame.fontWeight.value;
   final family = frame.fontFamily == null
       ? 'Helvetica, Arial, sans-serif'
       : '${frame.fontFamily}, Helvetica, Arial, sans-serif';

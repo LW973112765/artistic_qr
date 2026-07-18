@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.0.1
+
+* Shortened pubspec description for full pub.dev score.
+* Fixed deprecated `FontWeight.index` — now uses `FontWeight.value`.
+* Added 1.0.0 entry to CHANGELOG.
+
+## 1.0.0
+
+* **Public launch** — published to pub.dev with full documentation and
+  decode-verified screenshot gallery.
+* Fixed deprecated `FontWeight.index` usage in SVG export and frame JSON
+  serialization.
+* Shortened pubspec description for pub.dev scoring.
+
 ## 0.2.0
 
 * **Payload builders** — `QrData.wifi / vCard / email / sms / phone /
